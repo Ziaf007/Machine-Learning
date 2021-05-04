@@ -56,12 +56,14 @@ class MNIST_CNN(nn.Module):
 # Load the data
 mnist_train = datasets.MNIST(root="./datasets", train=True, transform=transforms.ToTensor(), download=True)
 mnist_test = datasets.MNIST(root="./datasets", train=False, transform=transforms.ToTensor(), download=True)
-train_loader = torch.utils.data.DataLoader(mnist_train, batch_size=100, shuffle=True, pin_memory=True)
-test_loader = torch.utils.data.DataLoader(mnist_test, batch_size=100, shuffle=False, pin_memory=True)
+train_loader = torch.utils.data.DataLoader(mnist_train, batch_size=100, shuffle=True)
+test_loader = torch.utils.data.DataLoader(mnist_test, batch_size=100, shuffle=False)
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 ## Training
 # Instantiate model
-model = MNIST_CNN().cuda() # <---- change here
+model = MNIST_CNN().to(device) # <---- change here
 
 # Loss and Optimizer
 criterion = nn.CrossEntropyLoss()
@@ -70,7 +72,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.001)  # <---- change here
 # Iterate through train set minibatchs
 for epoch in trange(3):  # <---- change here
     for images, labels in tqdm(train_loader):
-        images , labels = images.to(torch.device("cuda:0")) , labels.to(torch.device("cuda:0"))
+        images, labels = images.to(device) , labels.to(device)
         # Zero out the gradients
         optimizer.zero_grad()
 
@@ -89,7 +91,7 @@ total = len(mnist_test)
 with torch.no_grad():
     # Iterate through test set minibatchs
     for images, labels in tqdm(test_loader):
-        images, labels = images.to(torch.device("cuda:0")), labels.to(torch.device("cuda:0"))
+        images, labels = images.to(device), labels.to(device)
         # Forward pass
         x = images  # <---- change here
         y = model(x)

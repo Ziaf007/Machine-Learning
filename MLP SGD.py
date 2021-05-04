@@ -5,7 +5,9 @@
 
 import torch
 from torchvision import datasets, transforms
-import math
+import time
+begin = time.time()
+
 import torch.nn as nn
 from torch.nn import functional as F
 from tqdm.notebook import tqdm
@@ -18,6 +20,7 @@ Test_Data = datasets.MNIST(root="./datasets", train=False, transform=transforms.
 Train_Loader = dataloader(Train_Data, batch_size=200, shuffle=True)
 Test_Loader = dataloader(Test_Data, batch_size=200, shuffle=False)
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Building the model class
 class Net(nn.Module):
@@ -33,15 +36,17 @@ class Net(nn.Module):
         return x
 
 #Creating Instance
-model = Net()
+model = Net().to(device)
 
 optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
 
-loss_fn = nn.CrossEntropyLoss()
+loss_fn = nn.CrossEntropyLoss().to(device)
 Classifier = nn.LogSoftmax(dim=1)
 
 # TRAINING
 for images, labels in tqdm(Train_Loader):
+    images = images.to(device)
+    labels = labels.to(device)
     optimizer.zero_grad()       #resetting the gradients for the next batch
 
     y = model(images)
@@ -55,6 +60,9 @@ correct = 0
 total = len(Test_Data)
 with torch.no_grad():
     for images, labels in tqdm(Test_Loader):
+        images = images.to(device)
+        labels = labels.to(device)
+
         X = images.view(-1, 784)
         Y = model.forward(X)
 
@@ -62,3 +70,7 @@ with torch.no_grad():
         correct += torch.sum((predictions == labels).float())
 
 print("Test accuracy: {}".format(correct / total))
+
+end = time.time()
+
+print("Total time taken: {}".format(end-begin))
